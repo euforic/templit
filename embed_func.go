@@ -44,7 +44,7 @@ func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data inte
 			return "", fmt.Errorf("failed to clone repo: %w", err)
 		}
 
-		if embedInfo.Tag != "" {
+		if embedInfo.Tag != "main" {
 			err = client.Checkout(tempDir, embedInfo.Tag)
 			if err != nil {
 				return "", fmt.Errorf("failed to checkout branch: %w", err)

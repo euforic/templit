@@ -46,7 +46,7 @@ func (e *Executor) ImportFunc(client GitClient, outputDir string) func(repoAndTa
 			return fmt.Errorf("failed to clone repo: %w", err)
 		}
 
-		if depInfo.Tag != "" {
+		if depInfo.Tag != "main" {
 			err = client.Checkout(tempDir, depInfo.Tag)
 			if err != nil {
 				return fmt.Errorf("failed to checkout branch: %w", err)

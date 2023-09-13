@@ -131,8 +131,8 @@ func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
 	return nil
 }
 
-// Checkout checks out a branch in a Git repository.
-func (d *DefaultGitClient) Checkout(path, branch string) error {
+// Checkout checks out a branch, tag or commit hash in a Git repository.
+func (d *DefaultGitClient) Checkout(path, ref string) error {
 	r, err := git.PlainOpen(path)
 	if err != nil {
 		return err
@@ -143,7 +143,30 @@ func (d *DefaultGitClient) Checkout(path, branch string) error {
 		return err
 	}
 
-	return w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(branch),
+	// Try to checkout branch
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.ReferenceName("refs/remotes/origin/" + ref),
 	})
+	if err == nil {
+		return nil // Branch checked out successfully
+	}
+
+	// If branch checkout fails, try tag
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.ReferenceName("refs/tags/" + ref),
+	})
+	if err == nil {
+		return nil // Tag checked out successfully
+	}
+
+	// If tag checkout also fails, try using it as a commit hash
+	commitHash := plumbing.NewHash(ref)
+	err = w.Checkout(&git.CheckoutOptions{
+		Hash: commitHash,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to checkout reference %s: %w", ref, err)
+	}
+
+	return nil
 }
