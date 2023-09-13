@@ -28,7 +28,7 @@ func TestNewExecutor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := templit.NewExecutor()
+			executor := templit.NewExecutor(nil)
 			executor.Funcs(tt.funcMap)
 			err := executor.ParsePath(tt.input)
 			if (err != nil) != tt.err {
@@ -73,7 +73,7 @@ func TestRender(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := templit.NewExecutor()
+			executor := templit.NewExecutor(nil)
 			err := executor.ParsePath(tt.inputPath)
 			if err != nil {
 				t.Fatalf("failed to create executor: %v", err)

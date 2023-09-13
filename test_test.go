@@ -9,13 +9,21 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// MockGitClient is a mock implementation of the GitClient interface.
 type MockGitClient struct{}
 
+// DefaultBranch returns the default branch name.
+func (m *MockGitClient) DefaultBranch() string {
+	return "main"
+}
+
+// Clone clones a repository to the given destination.
 func (m *MockGitClient) Clone(host, owner, repo, dest string) error {
 	src := filepath.Join(host, owner, repo)
 	return copyDir(src, dest)
 }
 
+// Checkout checks out a branch.
 func (m *MockGitClient) Checkout(path, branch string) error {
 	// Mocked function, doesn't need to do anything for this test.
 	return nil

@@ -51,9 +51,8 @@ func TestEmbedFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := templit.NewExecutor()
-			fn := executor.EmbedFunc(client)
-			result, err := fn(tt.repoAndPath, tt.ctx)
+			executor := templit.NewExecutor(client)
+			result, err := executor.EmbedFunc(tt.repoAndPath, tt.ctx)
 			if err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {
 					t.Fatalf("expected error %v, got %v", tt.expectedError, err)

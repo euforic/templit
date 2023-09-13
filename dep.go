@@ -89,19 +89,30 @@ func extractBlockAndTag(fragment string) (string, string) {
 type GitClient interface {
 	Clone(host, owner, repo, dest string) error
 	Checkout(path, branch string) error
+	DefaultBranch() string
 }
 
 // DefaultGitClient provides a default implementation for the GitClient interface.
 type DefaultGitClient struct {
-	Token   string
-	BaseURL string
+	Token         string
+	defaultBranch string
 }
 
 // NewDefaultGitClient creates a new DefaultGitClient with the given token.
-func NewDefaultGitClient(token string) *DefaultGitClient {
-	return &DefaultGitClient{
-		Token: token,
+func NewDefaultGitClient(defaultBranch string, token string) *DefaultGitClient {
+	if defaultBranch == "" {
+		defaultBranch = "main"
 	}
+
+	return &DefaultGitClient{
+		Token:         token,
+		defaultBranch: defaultBranch,
+	}
+}
+
+// DefaultBranch returns the default branch name.
+func (d *DefaultGitClient) DefaultBranch() string {
+	return d.defaultBranch
 }
 
 // Clone clones a Git repository to the given destination.

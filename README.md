@@ -121,10 +121,10 @@ type DefaultGitClient struct {
 ### func NewDefaultGitClient
 
 ```go
-func NewDefaultGitClient(token string) *DefaultGitClient
+func NewDefaultGitClient(defaultBranch, token string) *DefaultGitClient
 ```
 
-NewDefaultGitClient creates a new DefaultGitClient with the given token.
+NewDefaultGitClient creates a new DefaultGitClient with the optional defaultBranch and token.
 
 <a name="DefaultGitClient.Checkout"></a>
 ### func (*DefaultGitClient) Checkout
@@ -184,7 +184,7 @@ type Executor struct {
 ### func NewExecutor
 
 ```go
-func NewExecutor() *Executor
+func NewExecutor(client GitClient) *Executor
 ```
 
 New returns a new Executor
@@ -193,7 +193,7 @@ New returns a new Executor
 ### func (*Executor) EmbedFunc
 
 ```go
-func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data interface{}) (string, error)
+func (e *Executor) EmbedFunc() func(remotePath string, data interface{}) (string, error)
 ```
 
 EmbedFunc returns a template function that can be used to process and embed a template from a remote git repository. EmbedFunc allows embedding content from a remote repository directly into a Go template.
@@ -219,7 +219,7 @@ Placeholders:
 ### func (*Executor) ImportFunc
 
 ```go
-func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}) (string, error)
+func (e *Executor) ImportFunc() func(repoAndTag, destPath string, data interface{}) (string, error)
 ```
 
 ImportFunc returns a function that can be used as a template function to import and process a template from a remote git repository. ImportFunc allows embedding content from a remote repository into a Go template.
@@ -285,5 +285,6 @@ GitClient is an interface that abstracts Git operations.
 type GitClient interface {
     Clone(host, owner, repo, dest string) error
     Checkout(path, branch string) error
+    DefaultBranch() string
 }
 ```

@@ -11,12 +11,14 @@ import (
 // Executor is a wrapper around the template.Template type
 type Executor struct {
 	*template.Template
+	git GitClient
 }
 
 // New returns a new Executor
-func NewExecutor() *Executor {
+func NewExecutor(gitClient GitClient) *Executor {
 	return &Executor{
 		Template: template.New("main").Funcs(DefaultFuncMap),
+		git:      gitClient,
 	}
 }
 

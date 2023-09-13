@@ -48,7 +48,7 @@ func TestExecutor_StringRender(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := templit.NewExecutor()
+			e := templit.NewExecutor(nil)
 			got, err := e.StringRender(tt.tmpl, tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("RenderTemplate() error = %v, wantErr %v", err, tt.wantErr)
@@ -93,9 +93,9 @@ func TestWalkAndProcessDir(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to create temp dir: %v", err)
 			}
-			//defer os.RemoveAll(tempOutputDir) // Cleanup
+			defer os.RemoveAll(tempOutputDir) // Cleanup
 
-			executor := templit.NewExecutor()
+			executor := templit.NewExecutor(nil)
 			err = executor.WalkAndProcessDir(tt.inputDir, tempOutputDir, tt.data)
 			if err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {

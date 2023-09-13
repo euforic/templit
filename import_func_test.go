@@ -11,7 +11,6 @@ import (
 
 // TestImportFunc tests the ImportFunc function.
 func TestImportFunc(t *testing.T) {
-	client := &MockGitClient{}
 
 	tests := []struct {
 		name          string
@@ -32,17 +31,21 @@ func TestImportFunc(t *testing.T) {
 		},
 	}
 
+	// Mocked GitClient
+	client := &MockGitClient{}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			destPath, err := os.MkdirTemp("", "test_output_"+strings.ReplaceAll(strings.ToLower(tt.name), " ", "_"))
 			if err != nil {
 				t.Fatal(fmt.Errorf("failed to create temp dir: %w", err))
 			}
-			fmt.Println(destPath)
-			//defer os.RemoveAll(destPath) // Cleanup
-			executor := templit.NewExecutor()
-			fn := executor.ImportFunc(client, destPath)
-			if err := fn(tt.repoAndTag, "./", tt.data); err != nil {
+
+			defer os.RemoveAll(destPath) // Cleanup
+
+			executor := templit.NewExecutor(client)
+			fn := executor.ImportFunc(destPath)
+			if _, err := fn(tt.repoAndTag, "./", tt.data); err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {
 					t.Fatalf("expected error %v, got %v", tt.expectedError, err)
 				}
