@@ -8,102 +8,83 @@ import (
 	"text/template"
 )
 
-// WalkAndProcessDirFunc is called for each file and directory when walking a directory.
-type WalkAndProcessDirFunc func(path string, isDir bool, content string) error
+// Executor is a wrapper around the template.Template type
+type Executor struct {
+	*template.Template
+}
 
-// WalkAndProcessDir processes all files in a directory with the given data.
-// If walkFunc is provided, it's called for each file and directory without writing the file to disk.
-func WalkAndProcessDir(inputDir, outputDir string, funcMap template.FuncMap, data interface{}) error {
-	// Create output directory
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
+// New returns a new Executor
+func NewExecutor() *Executor {
+	return &Executor{
+		Template: template.New("main").Funcs(DefaultFuncMap),
+	}
+}
+
+// ParsePath parses the given path
+func (e *Executor) ParsePath(inputPath string) error {
+	// check if input is a directory
+	info, err := os.Stat(inputPath)
+	if err != nil {
+		return fmt.Errorf("failed to stat input: %w", err)
 	}
 
-	// Master template for file processing
-	masterTmpl := template.New("main").Funcs(funcMap)
-
-	err := filepath.Walk(inputDir, func(path string, info os.FileInfo, err error) error {
+	if !info.IsDir() {
+		content, err := os.ReadFile(inputPath)
 		if err != nil {
-			return fmt.Errorf("error walking through directory: %w", err)
+			return fmt.Errorf("failed to read file: %w", err)
 		}
-
-		parsedName, err := RenderTemplate(filepath.Base(path), data, funcMap)
-		if err != nil {
-			return fmt.Errorf("error rendering path template: %w", err)
+		if _, err := e.New(inputPath).Parse(string(content)); err != nil {
+			return fmt.Errorf("failed to parse template: %w", err)
 		}
+		return nil
+	}
 
-		relPath, err := filepath.Rel(inputDir, filepath.Dir(path))
+	err = filepath.Walk(inputPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("error getting relative path: %w", err)
-		}
-
-		outPath := filepath.Join(outputDir, relPath, parsedName)
-		parsedOutPath, err := RenderTemplate(outPath, data, funcMap)
-		if err != nil {
-			return fmt.Errorf("error rendering path template: %w", err)
+			return fmt.Errorf("failed to walk directory: %w", err)
 		}
 
 		if info.IsDir() {
-			// Skip directories with empty or "-" prefixed names
-			if parsedName == "" || strings.HasPrefix(parsedName, "-") {
-				return filepath.SkipDir
-			}
-
-			// Skip root directory
-			if filepath.Base(outPath) == filepath.Base(inputDir) {
-				return nil
-			}
-
-			if err := os.MkdirAll(parsedOutPath, info.Mode()); err != nil {
-				return fmt.Errorf("error creating directory: %w", err)
-			}
-
 			return nil
 		}
 
-		// Skip files with empty names or "-" prefixed
-		if parsedName == "" || strings.HasPrefix(parsedName, "-") {
-			return nil
-		}
-
+		// Read, parse, and execute template only if it's a file
 		content, err := os.ReadFile(path)
 		if err != nil {
-			return fmt.Errorf("error reading file from templates: %w", err)
+			return fmt.Errorf("failed to read file: %w", err)
 		}
 
-		tmpl, err := masterTmpl.New(path).Parse(string(content))
-		if err != nil {
-			return fmt.Errorf("error parsing template: %w", err)
-		}
-
-		var buf strings.Builder
-		if err := tmpl.Execute(&buf, data); err != nil {
-			return fmt.Errorf("error executing template: %w", err)
-		}
-
-		if err := os.WriteFile(parsedOutPath, []byte(buf.String()), info.Mode()); err != nil {
-			return fmt.Errorf("error writing file to output: %w", err)
+		if _, err := e.New(path).Parse(string(content)); err != nil {
+			return fmt.Errorf("failed to parse template: %w", err)
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("error walking through directory: %w", err)
+		return fmt.Errorf("failed to parse templates: %w", err)
 	}
 
 	return nil
 }
 
-// RenderTemplate renders a template with provided data.
-func RenderTemplate(tmpl string, data interface{}, funcMap template.FuncMap) (string, error) {
-	t, err := template.New("main").Funcs(funcMap).Parse(tmpl)
-	if err != nil {
+// Render executes the template with the given data
+func (e Executor) Render(name string, data interface{}) (string, error) {
+	var buf strings.Builder
+	if err := e.ExecuteTemplate(&buf, name, data); err != nil {
+		return "", fmt.Errorf("failed to execute template %s: %w", name, err)
+	}
+	return buf.String(), nil
+}
+
+// StringRender renders the given template string with the given data
+func (e Executor) StringRender(templateString string, data interface{}) (string, error) {
+	if _, err := e.New("temp").Parse(templateString); err != nil {
 		return "", fmt.Errorf("error parsing template: %w", err)
 	}
 
 	var buf strings.Builder
-	if err := t.Execute(&buf, data); err != nil {
+	if err := e.ExecuteTemplate(&buf, "temp", data); err != nil {
 		return "", fmt.Errorf("error executing template: %w", err)
 	}
 

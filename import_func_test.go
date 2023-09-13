@@ -37,9 +37,9 @@ func TestImportFunc(t *testing.T) {
 				t.Fatal(fmt.Errorf("failed to create temp dir: %w", err))
 			}
 			defer os.RemoveAll(destPath) // Cleanup
-
-			fn := ImportFunc(client)
-			if _, err := fn(tt.repoAndTag, destPath, tt.data, nil); err != nil {
+			executor := NewExecutor()
+			fn := executor.ImportFunc(client)
+			if _, err := fn(tt.repoAndTag, destPath, tt.data); err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {
 					t.Fatalf("expected error %v, got %v", tt.expectedError, err)
 				}

@@ -12,25 +12,25 @@ import "github.com/euforic/templit"
 ## Index
 
 - [Variables](<#variables>)
-- [func EmbedFunc\(client GitClient\) func\(remotePath string, data interface\{\}, funcMap template.FuncMap\) \(string, error\)](<#EmbedFunc>)
-- [func ImportFunc\(client GitClient\) func\(repoAndTag, destPath string, data interface\{\}, funcMap template.FuncMap\) \(string, error\)](<#ImportFunc>)
-- [func RenderTemplate\(tmpl string, data interface\{\}, funcMap template.FuncMap\) \(string, error\)](<#RenderTemplate>)
-- [func ToCamelCase\(s string\) string](<#ToCamelCase>)
-- [func ToKebabCase\(s string\) string](<#ToKebabCase>)
-- [func ToPascalCase\(s string\) string](<#ToPascalCase>)
-- [func ToSnakeCase\(s string\) string](<#ToSnakeCase>)
-- [func WalkAndProcessDir\(inputDir, outputDir string, funcMap template.FuncMap, data interface\{\}\) error](<#WalkAndProcessDir>)
+- [func ToCamelCase(s string) string](<#ToCamelCase>)
+- [func ToKebabCase(s string) string](<#ToKebabCase>)
+- [func ToPascalCase(s string) string](<#ToPascalCase>)
+- [func ToSnakeCase(s string) string](<#ToSnakeCase>)
 - [type DefaultGitClient](<#DefaultGitClient>)
-  - [func NewDefaultGitClient\(token string\) \*DefaultGitClient](<#NewDefaultGitClient>)
-  - [func \(d \*DefaultGitClient\) Checkout\(path, branch string\) error](<#DefaultGitClient.Checkout>)
-  - [func \(d \*DefaultGitClient\) Clone\(host, owner, repo, dest string\) error](<#DefaultGitClient.Clone>)
+  - [func NewDefaultGitClient(token string) *DefaultGitClient](<#NewDefaultGitClient>)
+  - [func (d *DefaultGitClient) Checkout(path, branch string) error](<#DefaultGitClient.Checkout>)
+  - [func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error](<#DefaultGitClient.Clone>)
 - [type DepInfo](<#DepInfo>)
-  - [func ParseDepURL\(rawURL string\) \(\*DepInfo, error\)](<#ParseDepURL>)
+  - [func ParseDepURL(rawURL string) (*DepInfo, error)](<#ParseDepURL>)
 - [type Executor](<#Executor>)
-  - [func NewExecutor\(inputPath string, funcMap template.FuncMap\) \(\*Executor, error\)](<#NewExecutor>)
-  - [func \(e Executor\) Render\(name string, data interface\{\}\) \(string, error\)](<#Executor.Render>)
+  - [func NewExecutor() *Executor](<#NewExecutor>)
+  - [func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data interface{}) (string, error)](<#Executor.EmbedFunc>)
+  - [func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}) (string, error)](<#Executor.ImportFunc>)
+  - [func (e *Executor) ParsePath(inputPath string) error](<#Executor.ParsePath>)
+  - [func (e Executor) Render(name string, data interface{}) (string, error)](<#Executor.Render>)
+  - [func (e Executor) StringRender(templateString string, data interface{}) (string, error)](<#Executor.StringRender>)
+  - [func (e *Executor) WalkAndProcessDir(inputDir, outputDir string, data interface{}) error](<#Executor.WalkAndProcessDir>)
 - [type GitClient](<#GitClient>)
-- [type WalkAndProcessDirFunc](<#WalkAndProcessDirFunc>)
 
 
 ## Variables
@@ -65,71 +65,9 @@ var DefaultFuncMap = template.FuncMap{
     "toCamelCase":  ToCamelCase,
     "toKebabCase":  ToKebabCase,
     "toPascalCase": ToPascalCase,
-    "default": DefaultVal,
+    "default":      defaultVal,
 }
 ```
-
-<a name="EmbedFunc"></a>
-## func EmbedFunc
-
-```go
-func EmbedFunc(client GitClient) func(remotePath string, data interface{}, funcMap template.FuncMap) (string, error)
-```
-
-EmbedFunc returns a template function that can be used to process and embed a template from a remote git repository. EmbedFunc allows embedding content from a remote repository directly into a Go template.
-
-Steps to use:
-
-1. Add the function to the FuncMap.
-2. Use the following syntax within your template:
-    ```go
-    {{ embed "<host>/<owner>/<repo>/<path>@<tag_or_hash_or_branch>" . }}
-    {{ embed "<host>/<owner>/<repo>#<block>@<tag_or_hash_or_branch>" . }}
-    ```
-
-Placeholders:
-
-- `<host>`: Repository hosting service (e.g., "github.com").
-- `<owner>`: Repository owner or organization.
-- `<repo>`: Repository name.
-- `<path>`: Path to the desired template file within the repository.
-- `<block>`: Specific template block name.
-- `<tag_or_hash_or_branch>`: Specific Git reference (tag, commit hash, or branch name).
-
-<a name="ImportFunc"></a>
-## func ImportFunc
-
-```go
-func ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}, funcMap template.FuncMap) (string, error)
-```
-
-ImportFunc returns a function that can be used as a template function to import and process a template from a remote git repository. ImportFunc allows embedding content from a remote repository into a Go template.
-
-Steps to use:
-
-1. Add the function to the FuncMap.
-2. Use the following syntax within your template:
-    ```go
-    {{ import "<host>/<owner>/<repo>/<path>@<tag_or_hash_or_branch>" "<path_to_genrate_files>" . }}
-    ```
-
-Placeholders:
-
-- `<host>`: Repository hosting service (e.g., "github.com").
-- `<owner>`: Repository owner or organization.
-- `<repo>`: Repository name.
-- `<path>`: Path to the desired file or directory within the repository.
-- `<tag_or_hash_or_branch>`: Specific Git reference (tag, commit hash, or branch name).
-
-
-<a name="RenderTemplate"></a>
-## func RenderTemplate
-
-```go
-func RenderTemplate(tmpl string, data interface{}, funcMap template.FuncMap) (string, error)
-```
-
-RenderTemplate renders a template with provided data.
 
 <a name="ToCamelCase"></a>
 ## func ToCamelCase
@@ -147,7 +85,7 @@ ToCamelCase converts a string to CamelCase.
 func ToKebabCase(s string) string
 ```
 
-ToKebabCase converts a string to kebab\-case.
+ToKebabCase converts a string to kebab-case.
 
 <a name="ToPascalCase"></a>
 ## func ToPascalCase
@@ -165,16 +103,7 @@ ToPascalCase converts a string to PascalCase.
 func ToSnakeCase(s string) string
 ```
 
-ToSnakeCase converts a string to snake\_case.
-
-<a name="WalkAndProcessDir"></a>
-## func WalkAndProcessDir
-
-```go
-func WalkAndProcessDir(inputDir, outputDir string, funcMap template.FuncMap, data interface{}) error
-```
-
-WalkAndProcessDir processes all files in a directory with the given data. If walkFunc is provided, it's called for each file and directory without writing the file to disk.
+ToSnakeCase converts a string to snake_case.
 
 <a name="DefaultGitClient"></a>
 ## type DefaultGitClient
@@ -198,7 +127,7 @@ func NewDefaultGitClient(token string) *DefaultGitClient
 NewDefaultGitClient creates a new DefaultGitClient with the given token.
 
 <a name="DefaultGitClient.Checkout"></a>
-### func \(\*DefaultGitClient\) Checkout
+### func (*DefaultGitClient) Checkout
 
 ```go
 func (d *DefaultGitClient) Checkout(path, branch string) error
@@ -207,7 +136,7 @@ func (d *DefaultGitClient) Checkout(path, branch string) error
 Checkout checks out a branch in a Git repository.
 
 <a name="DefaultGitClient.Clone"></a>
-### func \(\*DefaultGitClient\) Clone
+### func (*DefaultGitClient) Clone
 
 ```go
 func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error
@@ -255,19 +184,97 @@ type Executor struct {
 ### func NewExecutor
 
 ```go
-func NewExecutor(inputPath string, funcMap template.FuncMap) (*Executor, error)
+func NewExecutor() *Executor
 ```
 
-NewExecutor creates a new Executor with the given template and funcMap
+New returns a new Executor
+
+<a name="Executor.EmbedFunc"></a>
+### func (*Executor) EmbedFunc
+
+```go
+func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data interface{}) (string, error)
+```
+
+EmbedFunc returns a template function that can be used to process and embed a template from a remote git repository. EmbedFunc allows embedding content from a remote repository directly into a Go template.
+
+Steps to use:
+
+1. Add the function to the FuncMap.
+2. Use the following syntax within your template:
+    ```
+    {{ embed "<host>/<owner>/<repo>/<path>@<tag_or_hash_or_branch>" . }}
+    {{ embed "<host>/<owner>/<repo>#<block>@<tag_or_hash_or_branch>" . }}
+    ```
+Placeholders:
+
+- `<host>`: Repository hosting service (e.g., "github.com").
+- `<owner>`: Repository owner or organization.
+- `<repo>`: Repository name.
+- `<path>`: Path to the desired file or directory within the repository.
+- `<block>`: Specific template block name.
+- `<tag_or_hash_or_branch>`: Specific Git reference (tag, commit hash, or branch name).
+
+<a name="Executor.ImportFunc"></a>
+### func (*Executor) ImportFunc
+
+```go
+func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}) (string, error)
+```
+
+ImportFunc returns a function that can be used as a template function to import and process a template from a remote git repository. ImportFunc allows embedding content from a remote repository into a Go template.
+
+Steps to use:
+
+1. Add the function to the FuncMap.
+2. Use the following syntax within your template:
+    ```
+    `{{ import "<host>/<owner>/<repo>/<path>@<tag_or_hash_or_branch>" "<path_to_genrate_files>" . }}
+    `{{ import "<host>/<owner>/<repo>/<path>@<tag_or_hash_or_branch>" "<path_to_genrate_files>" . }}
+    ```
+Placeholders:
+
+- `<host>`: Repository hosting service (e.g., "github.com").
+- `<owner>`: Repository owner or organization.
+- `<repo>`: Repository name.
+- `<path>`: Path to the desired file or directory within the repository.
+- `<tag_or_hash_or_branch>`: Specific Git reference (tag, commit hash, or branch name).
+
+<a name="Executor.ParsePath"></a>
+### func (*Executor) ParsePath
+
+```go
+func (e *Executor) ParsePath(inputPath string) error
+```
+
+ParsePath parses the given path
 
 <a name="Executor.Render"></a>
-### func \(Executor\) Render
+### func (Executor) Render
 
 ```go
 func (e Executor) Render(name string, data interface{}) (string, error)
 ```
 
 Render executes the template with the given data
+
+<a name="Executor.StringRender"></a>
+### func (Executor) StringRender
+
+```go
+func (e Executor) StringRender(templateString string, data interface{}) (string, error)
+```
+
+StringRender renders the given template string with the given data
+
+<a name="Executor.WalkAndProcessDir"></a>
+### func (*Executor) WalkAndProcessDir
+
+```go
+func (e *Executor) WalkAndProcessDir(inputDir, outputDir string, data interface{}) error
+```
+
+WalkAndProcessDir processes all files in a directory with the given data. If walkFunc is provided, it's called for each file and directory without writing the file to disk.
 
 <a name="GitClient"></a>
 ## type GitClient
@@ -280,14 +287,3 @@ type GitClient interface {
     Checkout(path, branch string) error
 }
 ```
-
-<a name="WalkAndProcessDirFunc"></a>
-## type WalkAndProcessDirFunc
-
-WalkAndProcessDirFunc is called for each file and directory when walking a directory.
-
-```go
-type WalkAndProcessDirFunc func(path string, isDir bool, content string) error
-```
-
-
