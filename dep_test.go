@@ -1,8 +1,9 @@
-package templit
+package templit_test
 
 import (
 	"testing"
 
+	"github.com/euforic/templit"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -11,13 +12,13 @@ func TestParseDepURL(t *testing.T) {
 	tests := []struct {
 		name     string
 		rawURL   string
-		expected *DepInfo
+		expected *templit.DepInfo
 		wantErr  bool
 	}{
 		{
 			name:   "Basic URL with path and fragment",
 			rawURL: "https://github.com/owner/repo/path/to/file#block@v1.2.3",
-			expected: &DepInfo{
+			expected: &templit.DepInfo{
 				Host:  "github.com",
 				Owner: "owner",
 				Repo:  "repo",
@@ -30,7 +31,7 @@ func TestParseDepURL(t *testing.T) {
 		{
 			name:   "URL without path",
 			rawURL: "https://github.com/owner/repo",
-			expected: &DepInfo{
+			expected: &templit.DepInfo{
 				Host:  "github.com",
 				Owner: "owner",
 				Repo:  "repo",
@@ -43,7 +44,7 @@ func TestParseDepURL(t *testing.T) {
 		{
 			name:   "URL with tag in path",
 			rawURL: "https://github.com/owner/repo/path/to/file@v1.2.3",
-			expected: &DepInfo{
+			expected: &templit.DepInfo{
 				Host:  "github.com",
 				Owner: "owner",
 				Repo:  "repo",
@@ -56,7 +57,7 @@ func TestParseDepURL(t *testing.T) {
 		{
 			name:   "URL with tag in repo",
 			rawURL: "https://github.com/owner/repo@v1.2.3",
-			expected: &DepInfo{
+			expected: &templit.DepInfo{
 				Host:  "github.com",
 				Owner: "owner",
 				Repo:  "repo",
@@ -69,7 +70,7 @@ func TestParseDepURL(t *testing.T) {
 		{
 			name:   "URL without protocol",
 			rawURL: "https://github.com/owner/repo/some/path#test_block@v1.2.3",
-			expected: &DepInfo{
+			expected: &templit.DepInfo{
 				Host:  "github.com",
 				Owner: "owner",
 				Repo:  "repo",
@@ -89,7 +90,7 @@ func TestParseDepURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := ParseDepURL(tt.rawURL)
+			result, err := templit.ParseDepURL(tt.rawURL)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("expected error %v, got %v", tt.wantErr, err)
 			}

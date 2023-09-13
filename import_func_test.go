@@ -1,10 +1,12 @@
-package templit
+package templit_test
 
 import (
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/euforic/templit"
 )
 
 // TestImportFunc tests the ImportFunc function.
@@ -32,14 +34,15 @@ func TestImportFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			destPath, err := os.MkdirTemp("", "test_output_"+tt.name)
+			destPath, err := os.MkdirTemp("", "test_output_"+strings.ReplaceAll(strings.ToLower(tt.name), " ", "_"))
 			if err != nil {
 				t.Fatal(fmt.Errorf("failed to create temp dir: %w", err))
 			}
-			defer os.RemoveAll(destPath) // Cleanup
-			executor := NewExecutor()
-			fn := executor.ImportFunc(client)
-			if _, err := fn(tt.repoAndTag, destPath, tt.data); err != nil {
+			fmt.Println(destPath)
+			//defer os.RemoveAll(destPath) // Cleanup
+			executor := templit.NewExecutor()
+			fn := executor.ImportFunc(client, destPath)
+			if err := fn(tt.repoAndTag, "./", tt.data); err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {
 					t.Fatalf("expected error %v, got %v", tt.expectedError, err)
 				}

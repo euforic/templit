@@ -1,10 +1,11 @@
-package templit
+package templit_test
 
 import (
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/euforic/templit"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -50,7 +51,7 @@ func TestEmbedFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := NewExecutor()
+			executor := templit.NewExecutor()
 			fn := executor.EmbedFunc(client)
 			result, err := fn(tt.repoAndPath, tt.ctx)
 			if err != nil {

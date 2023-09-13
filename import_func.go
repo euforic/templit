@@ -23,13 +23,13 @@ import (
 //   - `<repo>`: Repository name.
 //   - `<path>`: Path to the desired file or directory within the repository.
 //   - `<tag_or_hash_or_branch>`: Specific Git reference (tag, commit hash, or branch name).
-func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}) (string, error) {
-	return func(repoAndTag, destPath string, data interface{}) (string, error) {
+func (e *Executor) ImportFunc(client GitClient, outputDir string) func(repoAndTag, destPath string, data interface{}) error {
+	return func(repoAndTag, destPath string, data interface{}) error {
 		const tempDirPrefix = "temp_clone_"
 
 		depInfo, err := ParseDepURL(repoAndTag)
 		if err != nil {
-			return "", fmt.Errorf("failed to parse embed URL: %w", err)
+			return fmt.Errorf("failed to parse embed URL: %w", err)
 		}
 
 		if depInfo.Tag == "" {
@@ -38,25 +38,49 @@ func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string
 
 		tempDir, err := os.MkdirTemp("", tempDirPrefix)
 		if err != nil {
-			return "", fmt.Errorf("failed to create temp dir: %w", err)
+			return fmt.Errorf("failed to create temp dir: %w", err)
 		}
 		defer os.RemoveAll(tempDir) // Cleanup
 
 		if err := client.Clone(depInfo.Host, depInfo.Owner, depInfo.Repo, tempDir); err != nil {
-			return "", fmt.Errorf("failed to clone repo: %w", err)
+			return fmt.Errorf("failed to clone repo: %w", err)
 		}
 
-		err = client.Checkout(tempDir, depInfo.Tag)
-		if err != nil {
-			return "", fmt.Errorf("failed to checkout branch: %w", err)
+		if depInfo.Tag != "" {
+			err = client.Checkout(tempDir, depInfo.Tag)
+			if err != nil {
+				return fmt.Errorf("failed to checkout branch: %w", err)
+			}
 		}
 
 		sourcePath := filepath.Join(tempDir, depInfo.Path)
-		err = e.WalkAndProcessDir(sourcePath, destPath, data)
-		if err != nil {
-			return "", fmt.Errorf("failed to process template: %w", err)
+		outputPath := filepath.Join(outputDir, destPath)
+
+		// check if path is a file
+		if info, err := os.Stat(sourcePath); err == nil && !info.IsDir() {
+			// parse the file
+			if err := e.ParsePath(filepath.Dir(sourcePath)); err != nil {
+				return fmt.Errorf("failed to create executor: %w", err)
+			}
+
+			// render the file
+			string, err := e.Render(sourcePath, data)
+			if err != nil {
+				return fmt.Errorf("failed to render template: %w", err)
+			}
+
+			// write the file
+			if err := os.WriteFile(filepath.Join(outputPath, filepath.Base(depInfo.Path)), []byte(string), 0644); err != nil {
+				return fmt.Errorf("failed to write file: %w", err)
+			}
+
+			return nil
 		}
 
-		return "", nil
+		if err := e.WalkAndProcessDir(sourcePath, outputPath, data); err != nil {
+			return fmt.Errorf("failed to process template: %w", err)
+		}
+
+		return nil
 	}
 }

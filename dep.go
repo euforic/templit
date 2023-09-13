@@ -107,6 +107,9 @@ func NewDefaultGitClient(token string) *DefaultGitClient {
 // Clone clones a Git repository to the given destination.
 func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
 	repoURL := fmt.Sprintf("%s/%s/%s.git", host, owner, repo)
+	if !strings.HasPrefix(repoURL, "https://") {
+		repoURL = fmt.Sprintf("https://%s", repoURL)
+	}
 
 	var auth *http.BasicAuth
 	if d.Token != "" {
@@ -121,7 +124,11 @@ func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
 		Auth: auth,
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to clone repo %s: %w", repoURL, err)
+	}
+
+	return nil
 }
 
 // Checkout checks out a branch in a Git repository.

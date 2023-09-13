@@ -1,4 +1,4 @@
-package templit
+package templit_test
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"text/template"
+
+	"github.com/euforic/templit"
 )
 
 // TestExecutor_RenderTemplate tests the StringRender function.
@@ -46,7 +48,7 @@ func TestExecutor_StringRender(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewExecutor()
+			e := templit.NewExecutor()
 			got, err := e.StringRender(tt.tmpl, tt.data)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("RenderTemplate() error = %v, wantErr %v", err, tt.wantErr)
@@ -78,7 +80,7 @@ func TestWalkAndProcessDir(t *testing.T) {
 				"Description": "This is a test project.",
 				"Detail":      "more info here.",
 			},
-			funcMap:        DefaultFuncMap,
+			funcMap:        templit.DefaultFuncMap,
 			expectedOutput: "test_data/outputs/basic_test/",
 		},
 		// ... (other test cases)
@@ -93,7 +95,7 @@ func TestWalkAndProcessDir(t *testing.T) {
 			}
 			//defer os.RemoveAll(tempOutputDir) // Cleanup
 
-			executor := NewExecutor()
+			executor := templit.NewExecutor()
 			err = executor.WalkAndProcessDir(tt.inputDir, tempOutputDir, tt.data)
 			if err != nil {
 				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {

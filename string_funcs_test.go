@@ -1,8 +1,9 @@
-package templit
+package templit_test
 
 import (
 	"testing"
 
+	"github.com/euforic/templit"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -19,7 +20,7 @@ func TestToCamelCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := ToCamelCase(test.input)
+		result := templit.ToCamelCase(test.input)
 		if diff := cmp.Diff(test.output, result); diff != "" {
 			t.Errorf("toCamelCase(%s) mismatch (-want +got):\n%s", test.input, diff)
 		}
@@ -42,7 +43,7 @@ func TestToSnakeCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := ToSnakeCase(test.input)
+		result := templit.ToSnakeCase(test.input)
 		if diff := cmp.Diff(test.output, result); diff != "" {
 			t.Errorf("ToSnakeCase(%s) mismatch (-want +got):\n%s", test.input, diff)
 		}
@@ -65,7 +66,7 @@ func TestToKebabCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := ToKebabCase(test.input)
+		result := templit.ToKebabCase(test.input)
 		if diff := cmp.Diff(test.output, result); diff != "" {
 			t.Errorf("ToKebabCase(%s) mismatch (-want +got):\n%s", test.input, diff)
 		}
@@ -85,7 +86,7 @@ func TestToPascalCase(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := ToPascalCase(test.input)
+		result := templit.ToPascalCase(test.input)
 		if diff := cmp.Diff(test.output, result); diff != "" {
 			t.Errorf("ToPascalCase(%s) mismatch (-want +got):\n%s", test.input, diff)
 		}

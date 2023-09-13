@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 // EmbedFunc returns a template function that can be used to process and embed a template from a remote git repository.
@@ -31,7 +32,7 @@ func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data inte
 			return "", err
 		}
 
-		const tempDirPrefix = "temp_clone_"
+		const tempDirPrefix = "templit_clone_"
 		tempDir, err := os.MkdirTemp("", tempDirPrefix)
 		if err != nil {
 			return "", fmt.Errorf("failed to create temp dir: %w", err)
@@ -43,12 +44,17 @@ func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data inte
 			return "", fmt.Errorf("failed to clone repo: %w", err)
 		}
 
-		err = client.Checkout(tempDir, embedInfo.Tag)
-		if err != nil {
-			return "", fmt.Errorf("failed to checkout branch: %w", err)
+		if embedInfo.Tag != "" {
+			err = client.Checkout(tempDir, embedInfo.Tag)
+			if err != nil {
+				return "", fmt.Errorf("failed to checkout branch: %w", err)
+			}
 		}
 
-		if err := e.ParsePath(tempDir); err != nil {
+		// templatePath is the path to the template file or directory
+		templatePath := path.Join(tempDir, embedInfo.Path)
+
+		if err := e.ParsePath(filepath.Dir(templatePath)); err != nil {
 			return "", fmt.Errorf("failed to create executor: %w", err)
 		}
 

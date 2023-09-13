@@ -1,9 +1,10 @@
-package templit
+package templit_test
 
 import (
 	"testing"
 	"text/template"
 
+	"github.com/euforic/templit"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -27,7 +28,7 @@ func TestNewExecutor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := NewExecutor()
+			executor := templit.NewExecutor()
 			executor.Funcs(tt.funcMap)
 			err := executor.ParsePath(tt.input)
 			if (err != nil) != tt.err {
@@ -72,7 +73,7 @@ func TestRender(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			executor := NewExecutor()
+			executor := templit.NewExecutor()
 			err := executor.ParsePath(tt.inputPath)
 			if err != nil {
 				t.Fatalf("failed to create executor: %v", err)

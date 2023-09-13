@@ -1,4 +1,4 @@
-package templit
+package templit_test
 
 import (
 	"fmt"
