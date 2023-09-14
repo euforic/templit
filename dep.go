@@ -20,6 +20,34 @@ type DepInfo struct {
 	Tag   string
 }
 
+// String returns the string representation of a DepInfo.
+func (d DepInfo) String() string {
+	var builder strings.Builder
+
+	builder.WriteString(d.Host)
+	builder.WriteRune('/')
+	builder.WriteString(d.Owner)
+	builder.WriteRune('/')
+	builder.WriteString(d.Repo)
+
+	if d.Path != "" {
+		builder.WriteRune('/')
+		builder.WriteString(d.Path)
+	}
+
+	if d.Block != "" {
+		builder.WriteRune('#')
+		builder.WriteString(d.Block)
+	}
+
+	if d.Tag != "" {
+		builder.WriteRune('@')
+		builder.WriteString(d.Tag)
+	}
+
+	return builder.String()
+}
+
 // ParseDepURL is a parsed embed URL.
 func ParseDepURL(rawURL string) (*DepInfo, error) {
 	if !strings.HasPrefix(rawURL, "http://") && !strings.HasPrefix(rawURL, "https://") {
@@ -31,8 +59,15 @@ func ParseDepURL(rawURL string) (*DepInfo, error) {
 		return nil, err
 	}
 
+	// Extract the tag if it exists before splitting the path
+	fullPath := strings.Trim(u.Path, "/")
+	tag := ""
+	if idx := strings.Index(fullPath, "@"); idx != -1 {
+		fullPath, tag = splitAtSign(fullPath)
+	}
+
 	// Split path into components
-	pathParts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	pathParts := strings.Split(fullPath, "/")
 	if len(pathParts) < 2 {
 		return nil, fmt.Errorf("invalid path format in embed URL")
 	}
@@ -44,15 +79,10 @@ func ParseDepURL(rawURL string) (*DepInfo, error) {
 		path = strings.Join(pathParts[2:], "/")
 	}
 
-	// Extract block and version
-	block, tag := extractBlockAndTag(u.Fragment)
-
-	if tag == "" {
-		if strings.Contains(path, "@") {
-			path, tag = splitAtSign(path)
-		} else if strings.Contains(repo, "@") {
-			repo, tag = splitAtSign(repo)
-		}
+	// If fragment contains the tag, then prioritize it over the tag in the path
+	block, fragmentTag := extractBlockAndTag(u.Fragment)
+	if fragmentTag != "" {
+		tag = fragmentTag
 	}
 
 	return &DepInfo{

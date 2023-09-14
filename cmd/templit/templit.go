@@ -15,6 +15,7 @@ import (
 var flagValues = struct {
 	token  string
 	branch string
+	remote string
 }{}
 
 // templitCmd represents the templit command
@@ -82,6 +83,26 @@ var renderCmd = &cobra.Command{
 		maps.Copy(funcMap, templit.DefaultFuncMap)
 		executor.Funcs(funcMap)
 
+		// If a remote repository is specified, process the template and write it to the output directory
+		if flagValues.remote != "" {
+			importParts, err := templit.ParseDepURL(flagValues.remote)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error parsing remote: %s\n", err)
+				return
+			}
+
+			importParts.Path = inputPath
+
+			if _, err := executor.ImportFunc(outputPath)(importParts.String(), "./", values); err != nil {
+				fmt.Fprintf(os.Stderr, "Error processing template: %s\n", err)
+			}
+			return
+		}
+
+		// Copy the default function map from the templit package
+		maps.Copy(funcMap, templit.DefaultFuncMap)
+		executor.Funcs(funcMap)
+
 		// Process the templates in the input directory and write them to the output directory
 		if err := executor.WalkAndProcessDir(inputPath, outputPath, values); err != nil {
 			fmt.Fprintf(os.Stderr, "Error processing template: %s\n", err)
@@ -93,6 +114,7 @@ func init() {
 	templitCmd.AddCommand(renderCmd)
 	renderCmd.Flags().StringVarP(&flagValues.token, "git_token", "t", "", "GitHub token")
 	renderCmd.Flags().StringVarP(&flagValues.branch, "branch", "b", "main", "GitHub branch")
+	renderCmd.Flags().StringVarP(&flagValues.remote, "remote", "r", "", "remote repository to use. (example: github.com/owner/repo@ref)")
 }
 
 // main is the entrypoint of the application
