@@ -9,30 +9,6 @@
 import "github.com/euforic/templit"
 ```
 
-## Index
-
-- [Variables](<#variables>)
-- [func ToCamelCase(s string) string](<#ToCamelCase>)
-- [func ToKebabCase(s string) string](<#ToKebabCase>)
-- [func ToPascalCase(s string) string](<#ToPascalCase>)
-- [func ToSnakeCase(s string) string](<#ToSnakeCase>)
-- [type DefaultGitClient](<#DefaultGitClient>)
-  - [func NewDefaultGitClient(token string) *DefaultGitClient](<#NewDefaultGitClient>)
-  - [func (d *DefaultGitClient) Checkout(path, branch string) error](<#DefaultGitClient.Checkout>)
-  - [func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error](<#DefaultGitClient.Clone>)
-- [type DepInfo](<#DepInfo>)
-  - [func ParseDepURL(rawURL string) (*DepInfo, error)](<#ParseDepURL>)
-- [type Executor](<#Executor>)
-  - [func NewExecutor() *Executor](<#NewExecutor>)
-  - [func (e *Executor) EmbedFunc(client GitClient) func(remotePath string, data interface{}) (string, error)](<#Executor.EmbedFunc>)
-  - [func (e *Executor) ImportFunc(client GitClient) func(repoAndTag, destPath string, data interface{}) (string, error)](<#Executor.ImportFunc>)
-  - [func (e *Executor) ParsePath(inputPath string) error](<#Executor.ParsePath>)
-  - [func (e Executor) Render(name string, data interface{}) (string, error)](<#Executor.Render>)
-  - [func (e Executor) StringRender(templateString string, data interface{}) (string, error)](<#Executor.StringRender>)
-  - [func (e *Executor) WalkAndProcessDir(inputDir, outputDir string, data interface{}) error](<#Executor.WalkAndProcessDir>)
-- [type GitClient](<#GitClient>)
-
-
 ## Variables
 
 <a name="DefaultFuncMap"></a>DefaultFuncMap is the default function map for templates.
@@ -177,6 +153,7 @@ Executor is a wrapper around the template.Template type
 ```go
 type Executor struct {
     *template.Template
+    git GitClient
 }
 ```
 
@@ -219,7 +196,7 @@ Placeholders:
 ### func (*Executor) ImportFunc
 
 ```go
-func (e *Executor) ImportFunc() func(repoAndTag, destPath string, data interface{}) (string, error)
+func (e *Executor) ImportFunc(destPath string) func(repoAndTag, path string, data interface{}) (string, error)
 ```
 
 ImportFunc returns a function that can be used as a template function to import and process a template from a remote git repository. ImportFunc allows embedding content from a remote repository into a Go template.
