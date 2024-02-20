@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Go Template Renderer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/theme/material-darker.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/mode/go/go.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.3/keymap/vim.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    #output>.CodeMirror {
+      height: 80vh;
+    }
+  </style>
+</head>
+
+<body class="font-sans bg-gray-100 text-gray-800 p-5 h-screen overflow-hidden">
+  <div class="flex h-full">
+    <div class="w-1/2 h-screen p-2">
+      <div class="p-4 mb-4">
+        <h2 class="font-bold mb-2">Go Template</h2>
+        <div id="template" class="h-64"></div>
+      </div>
+      <div class="p-4">
+        <h2 class="font-bold mb-2">JSON Data</h2>
+        <div id="json" class="h-64"></div>
+      </div>
+      <div class="flex mt-10 mb-10 ml-5">
+        <input type="checkbox" id="vim-toggle" class="form-checkbox mr-2">
+        <label for="vim-toggle" class="select-none cursor-pointer">Enable Vim Keybindings</label>
+      </div>
+
+    </div>
+
+    <div class="w-1/2 h-screen p-2">
+      <div class="p-4 h-screen">
+        <h2 class="font-bold mb-2">Output</h2>
+        <div id="output" class="h-screen pb-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="wasm_exec.js"></script>
+  <script type="text/javascript">function fetchAndInstantiate(url, importObject) {
+      return fetch(url).then(response => response.arrayBuffer()).then(bytes => WebAssembly.instantiate(bytes, importObject)).then(results => results.instance);
+    }
+
+    var go = new Go();
+    var mod = fetchAndInstantiate("./main.wasm ", go.importObject);
+
+    window.onload = function () {
+      mod.then(function (instance) {
+        go.run(instance);
+      });
+    }
+  </script>
+</body>
+
+</html>
