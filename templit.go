@@ -17,7 +17,7 @@ type Executor struct {
 // New returns a new Executor
 func NewExecutor(gitClient GitClient) *Executor {
 	return &Executor{
-		Template: template.New("main").Funcs(DefaultFuncMap),
+		Template: template.New("main").Funcs(DefaultFuncMap()),
 		git:      gitClient,
 	}
 }
@@ -38,6 +38,7 @@ func (e *Executor) ParsePath(inputPath string) error {
 		if _, err := e.New(inputPath).Parse(string(content)); err != nil {
 			return fmt.Errorf("failed to parse template: %w", err)
 		}
+
 		return nil
 	}
 
@@ -62,7 +63,6 @@ func (e *Executor) ParsePath(inputPath string) error {
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to parse templates: %w", err)
 	}
@@ -76,6 +76,7 @@ func (e Executor) Render(name string, data interface{}) (string, error) {
 	if err := e.ExecuteTemplate(&buf, name, data); err != nil {
 		return "", fmt.Errorf("failed to execute template %s: %w", name, err)
 	}
+
 	return buf.String(), nil
 }
 

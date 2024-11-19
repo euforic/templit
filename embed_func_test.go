@@ -36,7 +36,7 @@ func TestEmbedFunc(t *testing.T) {
 			repoAndPath:   "invalidpath",
 			ctx:           nil,
 			expectedText:  "",
-			expectedError: fmt.Errorf("invalid path format in embed URL"),
+			expectedError: fmt.Errorf("invalid path"),
 		},
 		{
 			name:          "Invalid repo",

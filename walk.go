@@ -11,7 +11,8 @@ import (
 // If walkFunc is provided, it's called for each file and directory without writing the file to disk.
 func (e *Executor) WalkAndProcessDir(inputDir, outputDir string, data interface{}) error {
 	// Create output directory
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
+	const perms = os.FileMode(0o755)
+	if err := os.MkdirAll(outputDir, perms); err != nil {
 		return fmt.Errorf("failed to create output directory: %w", err)
 	}
 
@@ -80,7 +81,6 @@ func (e *Executor) WalkAndProcessDir(inputDir, outputDir string, data interface{
 
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("error walking through directory: %w", err)
 	}

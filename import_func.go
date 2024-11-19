@@ -54,19 +54,23 @@ func (e *Executor) ImportFunc(outputDir string) func(repoAndTag, destPath string
 
 		// check if path is a file
 		if info, err := os.Stat(sourcePath); err == nil && !info.IsDir() {
+			if os.IsNotExist(err) {
+				return "", fmt.Errorf("file does not exist %s, %w", sourcePath, os.ErrNotExist)
+			}
 			// parse the file
 			if err := e.ParsePath(filepath.Dir(sourcePath)); err != nil {
 				return "", fmt.Errorf("failed to create executor: %w", err)
 			}
 
 			// render the file
-			string, err := e.Render(sourcePath, data)
+			output, err := e.Render(sourcePath, data)
 			if err != nil {
 				return "", fmt.Errorf("failed to render template: %w", err)
 			}
 
 			// write the file
-			if err := os.WriteFile(filepath.Join(outputPath, filepath.Base(depInfo.Path)), []byte(string), 0644); err != nil {
+			const perms = os.FileMode(0o644)
+			if err := os.WriteFile(filepath.Join(outputPath, filepath.Base(depInfo.Path)), []byte(output), perms); err != nil {
 				return "", fmt.Errorf("failed to write file: %w", err)
 			}
 

@@ -1,7 +1,9 @@
+//nolint:gochecknoglobals,gochecknoinits
 package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"maps"
@@ -10,6 +12,8 @@ import (
 	"github.com/euforic/templit"
 	"github.com/spf13/cobra"
 )
+
+var ErrMissingToken = errors.New("embed and import functions requires a GitHub token")
 
 // flagValues stores the values of command-line flags
 var flagValues = struct {
@@ -23,7 +27,8 @@ var templitCmd = &cobra.Command{
 	Use:   "templit <command>",
 	Short: "A CLI tool for rendering templates from remote repositories",
 	Long:  `templit is a CLI tool for rendering templates from remote repositories.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	Args:  cobra.MinimumNArgs(3), //nolint:mnd
+	Run: func(cmd *cobra.Command, _ []string) {
 		if err := cmd.Help(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -35,15 +40,7 @@ var renderCmd = &cobra.Command{
 	Use:   "render <inputPath> <outputPath> <jsonData>",
 	Short: "A CLI tool for rendering templates from remote repositories",
 	Long:  `generate is for rendering templates.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		// Check for the correct number of command-line arguments
-		if len(args) < 3 {
-			if err := cmd.Help(); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-			}
-			return
-		}
-
+	Run: func(_ *cobra.Command, args []string) {
 		if flagValues.token == "" {
 			flagValues.token = os.Getenv("GIT_TOKEN")
 		}
@@ -57,6 +54,7 @@ var renderCmd = &cobra.Command{
 		// Parse the JSON data from the command-line argument
 		if err := json.Unmarshal([]byte(inputData), &values); err != nil {
 			fmt.Fprintf(os.Stderr, "Error parsing JSON data: %s\n", err)
+
 			return
 		}
 
@@ -64,13 +62,13 @@ var renderCmd = &cobra.Command{
 		executor := templit.NewExecutor(templit.NewDefaultGitClient(flagValues.branch, flagValues.token))
 
 		// funcMap defines the custom functions that can be used in templates
-		var funcMap = template.FuncMap{
+		funcMap := template.FuncMap{
 			// return an error for the embed and import functions if no GitHub token is provided
-			"embed": func(repoAndPath string, ctx interface{}) (string, error) {
-				return "", fmt.Errorf("embed function requires a GitHub token")
+			"embed": func(string, interface{}) (string, error) {
+				return "", ErrMissingToken
 			},
-			"import": func(repoAndPath string, destPath string, ctx interface{}) (string, error) {
-				return "", fmt.Errorf("import function requires a GitHub token")
+			"import": func(string, string, interface{}) (string, error) {
+				return "", ErrMissingToken
 			},
 		}
 
@@ -80,7 +78,7 @@ var renderCmd = &cobra.Command{
 		}
 
 		// Copy the default function map from the templit package
-		maps.Copy(funcMap, templit.DefaultFuncMap)
+		maps.Copy(funcMap, templit.DefaultFuncMap())
 		executor.Funcs(funcMap)
 
 		// If a remote repository is specified, process the template and write it to the output directory
@@ -88,6 +86,7 @@ var renderCmd = &cobra.Command{
 			importParts, err := templit.ParseDepURL(flagValues.remote)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error parsing remote: %s\n", err)
+
 				return
 			}
 
@@ -96,11 +95,12 @@ var renderCmd = &cobra.Command{
 			if _, err := executor.ImportFunc(outputPath)(importParts.String(), "./", values); err != nil {
 				fmt.Fprintf(os.Stderr, "Error processing template: %s\n", err)
 			}
+
 			return
 		}
 
 		// Copy the default function map from the templit package
-		maps.Copy(funcMap, templit.DefaultFuncMap)
+		maps.Copy(funcMap, templit.DefaultFuncMap())
 		executor.Funcs(funcMap)
 
 		// Process the templates in the input directory and write them to the output directory
