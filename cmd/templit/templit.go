@@ -78,7 +78,7 @@ var renderCmd = &cobra.Command{
 		}
 
 		// Copy the default function map from the templit package
-		maps.Copy(funcMap, templit.DefaultFuncMap())
+		executor.Funcs(templit.DefaultFuncMap())
 		executor.Funcs(funcMap)
 
 		// If a remote repository is specified, process the template and write it to the output directory
