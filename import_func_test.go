@@ -1,6 +1,7 @@
 package templit_test
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -11,7 +12,6 @@ import (
 
 // TestImportFunc tests the ImportFunc function.
 func TestImportFunc(t *testing.T) {
-
 	tests := []struct {
 		name          string
 		repoAndTag    string
@@ -46,7 +46,7 @@ func TestImportFunc(t *testing.T) {
 			executor := templit.NewExecutor(client)
 			fn := executor.ImportFunc(destPath)
 			if _, err := fn(tt.repoAndTag, "./", tt.data); err != nil {
-				if tt.expectedError == nil || err.Error() != tt.expectedError.Error() {
+				if tt.expectedError == nil || errors.Is(err, tt.expectedError) {
 					t.Fatalf("expected error %v, got %v", tt.expectedError, err)
 				}
 				return

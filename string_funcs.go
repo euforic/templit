@@ -15,6 +15,7 @@ func ToCamelCase(s string) string {
 			parts[i] = capitalizeFirstLetter(part)
 		}
 	}
+
 	return strings.Join(parts, "")
 }
 
@@ -40,6 +41,7 @@ func ToSnakeCase(s string) string {
 			previousIsLower = false
 		}
 	}
+
 	return result.String()
 }
 
@@ -65,6 +67,7 @@ func ToKebabCase(s string) string {
 			previousIsLower = false
 		}
 	}
+
 	return result.String()
 }
 
@@ -74,6 +77,7 @@ func ToPascalCase(s string) string {
 	for i, part := range parts {
 		parts[i] = capitalizeFirstLetter(part)
 	}
+
 	return strings.Join(parts, "")
 }
 
@@ -90,6 +94,7 @@ func splitAndFilter(s string) []string {
 		}
 		parts[i] = string(filtered)
 	}
+
 	return parts
 }
 
@@ -98,6 +103,7 @@ func splitByMultipleDelimiters(s string, delimiters []string) []string {
 	for _, delimiter := range delimiters {
 		s = strings.ReplaceAll(s, delimiter, " ")
 	}
+
 	return strings.Fields(s)
 }
 
@@ -106,5 +112,6 @@ func capitalizeFirstLetter(s string) string {
 	if s == "" {
 		return s
 	}
+
 	return strings.ToUpper(string(s[0])) + strings.ToLower(s[1:])
 }

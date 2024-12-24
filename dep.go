@@ -1,6 +1,7 @@
 package templit
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -19,6 +20,9 @@ type DepInfo struct {
 	Block string
 	Tag   string
 }
+
+// ErrInvalidPath is returned when the path is invalid.
+var ErrInvalidPath = errors.New("invalid path")
 
 // String returns the string representation of a DepInfo.
 func (d DepInfo) String() string {
@@ -56,7 +60,7 @@ func ParseDepURL(rawURL string) (*DepInfo, error) {
 
 	u, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
 	// Extract the tag if it exists before splitting the path
@@ -68,14 +72,15 @@ func ParseDepURL(rawURL string) (*DepInfo, error) {
 
 	// Split path into components
 	pathParts := strings.Split(fullPath, "/")
-	if len(pathParts) < 2 {
-		return nil, fmt.Errorf("invalid path format in embed URL")
+	minParts := 2
+	if len(pathParts) < minParts {
+		return nil, ErrInvalidPath
 	}
 
 	owner := pathParts[0]
 	repo := pathParts[1]
 	path := ""
-	if len(pathParts) > 2 {
+	if len(pathParts) > minParts {
 		path = strings.Join(pathParts[2:], "/")
 	}
 
@@ -101,6 +106,7 @@ func splitAtSign(s string) (string, string) {
 	if len(parts) > 1 {
 		return parts[0], parts[1]
 	}
+
 	return parts[0], ""
 }
 
@@ -109,9 +115,12 @@ func extractBlockAndTag(fragment string) (string, string) {
 	parts := strings.Split(fragment, "@")
 	if len(parts) > 1 {
 		return parts[0], parts[1]
-	} else if len(parts) == 1 {
+	}
+
+	if len(parts) == 1 {
 		return parts[0], ""
 	}
+
 	return "", ""
 }
 
@@ -147,9 +156,9 @@ func (d *DefaultGitClient) DefaultBranch() string {
 
 // Clone clones a Git repository to the given destination.
 func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
-	repoURL := fmt.Sprintf("%s/%s/%s.git", host, owner, repo)
+	repoURL := host + "/" + owner + "/" + repo + ".git"
 	if !strings.HasPrefix(repoURL, "https://") {
-		repoURL = fmt.Sprintf("https://%s", repoURL)
+		repoURL = "https://" + repoURL
 	}
 
 	var auth *http.BasicAuth
@@ -164,7 +173,6 @@ func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
 		URL:  repoURL,
 		Auth: auth,
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to clone repo %s: %w", repoURL, err)
 	}
@@ -176,12 +184,12 @@ func (d *DefaultGitClient) Clone(host, owner, repo, dest string) error {
 func (d *DefaultGitClient) Checkout(path, ref string) error {
 	r, err := git.PlainOpen(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open repository: %w", err)
 	}
 
 	w, err := r.Worktree()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get worktree: %w", err)
 	}
 
 	// Try to checkout branch

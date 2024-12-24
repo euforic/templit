@@ -113,13 +113,14 @@ func (app *App) renderTemplate(this js.Value, args []js.Value) interface{} {
 	jsonStr := args[1].String()
 
 	executor := templit.NewExecutor(templit.NewDefaultGitClient("main", ""))
-	funcs := templit.DefaultFuncMap
+	funcs := templit.DefaultFuncMap()
 	funcs["embed"] = func(name string) string {
 		return fmt.Sprintf("Embed (not enabled): %s", name)
 	}
 	funcs["import"] = func(name string) string {
 		return fmt.Sprintf("Import (not enabled): %s", name)
 	}
+
 	executor.Template.Funcs(funcs)
 
 	var data interface{}

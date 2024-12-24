@@ -12,7 +12,7 @@ import (
 
 // TestExecutor_RenderTemplate tests the StringRender function.
 func TestExecutor_StringRender(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		name     string
 		tmpl     string
 		data     interface{}
@@ -80,7 +80,7 @@ func TestWalkAndProcessDir(t *testing.T) {
 				"Description": "This is a test project.",
 				"Detail":      "more info here.",
 			},
-			funcMap:        templit.DefaultFuncMap,
+			funcMap:        templit.DefaultFuncMap(),
 			expectedOutput: "test_data/outputs/basic_test/",
 		},
 		// ... (other test cases)
